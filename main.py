@@ -1,64 +1,66 @@
 from flask import Flask, request
 import pandas as pd
 import numpy as np
+import pickle
+import sklearn
+
 
 app = Flask(__name__)
 
-columns_list = ['Price', 'Year', 'Mileage', 'State_ AK', 'State_ AR', 'State_ CT', 'State_ DC', 'State_ DE', 'State_ HI', 'State_ IA', 'State_ ID', 'State_ KS', 'State_ LA', 'State_ ME', 'State_ MS', 'State_ MT', 'State_ ND', 'State_ NE', 'State_ NH', 'State_ NM', 'State_ NV', 'State_ OR', 'State_ RI', 'State_ SC', 'State_ SD', 'State_ UT', 'State_ VT', 'State_ WV', 'State_ WY', 'Make_Acura', 'Make_Audi', 'Make_Bentley', 'Make_Buick', 'Make_Cadillac', 'Make_Chrysler', 'Make_FIAT', 'Make_Freightliner', 'Make_INFINITI', 'Make_Jaguar', 'Make_Land', 'Make_Lincoln', 'Make_MINI', 'Make_Mazda', 'Make_Mercedes-Benz', 'Make_Mercury', 'Make_Mitsubishi', 'Make_Nissan', 'Make_Pontiac', 'Make_Porsche', 'Make_Ram', 'Make_Scion', 'Make_Subaru', 'Make_Suzuki', 'Make_Tesla', 'Make_Volvo', 'Model_1', 'Model_15002WD', 'Model_1500Laramie', 'Model_1500Tradesman', 'Model_200LX', 'Model_200Touring', 'Model_25002WD', 'Model_300Base', 'Model_300Limited', 'Model_300Touring', 'Model_35004WD', 'Model_350Z2dr', 'Model_4Runner2WD', 'Model_4Runner4dr', 'Model_4RunnerLimited', 'Model_4RunnerRWD', 'Model_4RunnerTrail', 'Model_500Pop', 'Model_911', 'Model_9112dr', 'Model_A34dr', 'Model_A44dr', 'Model_A64dr', 'Model_A8', 'Model_Accent4dr', 'Model_AccordEX', 'Model_AccordLX-S', 'Model_AccordSE', 'Model_Armada2WD', 'Model_Armada4WD', 'Model_Avalanche2WD', 'Model_Avalanche4WD', 'Model_Avalon4dr', 'Model_AvalonLimited', 'Model_AvalonTouring', 'Model_Azera4dr', 'Model_Boxster2dr', 'Model_C-ClassC350', 'Model_C702dr', 'Model_CR-VSE', 'Model_CR-ZEX', 'Model_CT', 'Model_CTCT', 'Model_CTS-V', 'Model_CTS4dr', 'Model_CX-7FWD', 'Model_CX-9AWD', 'Model_CX-9FWD', 'Model_CX-9Grand', 'Model_CX-9Touring', 'Model_Caliber4dr', 'Model_CamryBase', 'Model_Canyon2WD', 'Model_Canyon4WD', 'Model_CanyonExtended', 'Model_CayenneAWD', 'Model_Cayman2dr', 'Model_CherokeeSport', 'Model_CivicEX-L', 'Model_CivicSi', 'Model_Cobalt2dr', 'Model_Cobalt4dr', 'Model_Colorado2WD', 'Model_Colorado4WD', 'Model_ColoradoExtended', 'Model_Compass4WD', 'Model_CompassLimited', 'Model_Continental', 'Model_CorvetteConvertible', 'Model_CorvetteCoupe', 'Model_CruzeLT', 'Model_DTS4dr', 'Model_Dakota2WD', 'Model_Dakota4WD', 'Model_Durango4dr', 'Model_DurangoSXT', 'Model_E-ClassE320', 'Model_Eclipse3dr', 'Model_EdgeSE', 'Model_EdgeSport', 'Model_Element2WD', 'Model_Element4WD', 'Model_EnclaveConvenience', 'Model_Eos2dr', 'Model_Escalade2WD', 'Model_Escalade4dr', 'Model_EscaladeAWD', 'Model_Escape4dr', 'Model_EscapeLImited', 'Model_EscapeLimited', 'Model_EscapeS', 'Model_EscapeXLT', 'Model_Excursion137"', 'Model_Expedition2WD', 'Model_Expedition4WD', 'Model_ExpeditionLimited', 'Model_ExpeditionXLT', 'Model_Explorer', 'Model_Explorer4dr', 'Model_ExplorerBase', 'Model_ExplorerEddie', 'Model_F-150FX2', 'Model_F-150King', 'Model_F-150Limited', 'Model_F-150STX', 'Model_F-250King', 'Model_F-250XL', 'Model_F-250XLT', 'Model_F-350King', 'Model_F-350Lariat', 'Model_F-350XL', 'Model_F-350XLT', 'Model_FX35AWD', 'Model_FiestaS', 'Model_FitSport', 'Model_FlexLimited', 'Model_FlexSE', 'Model_Focus5dr', 'Model_FocusS', 'Model_FocusSEL', 'Model_FocusST', 'Model_FocusTitanium', 'Model_Forester2.5X', 'Model_Forester4dr', 'Model_Forte', 'Model_ForteSX', 'Model_Frontier', 'Model_Frontier2WD', 'Model_Frontier4WD', 'Model_FusionS', 'Model_FusionSEL', 'Model_G64dr', 'Model_GLI4dr', 'Model_GTI2dr', 'Model_GTI4dr', 'Model_GXGX', 'Model_Galant4dr', 'Model_Genesis', 'Model_Highlander', 'Model_Highlander4WD', 'Model_Highlander4dr', 'Model_HighlanderBase', 'Model_HighlanderSE', 'Model_ImpalaLS', 'Model_Impreza2.0i', 'Model_ImprezaSport', 'Model_JourneyAWD', 'Model_LSLS', 'Model_LX', 'Model_LXLX', 'Model_LaCrosseAWD', 'Model_Lancer4dr', 'Model_Land', 'Model_Legacy', 'Model_Legacy3.6R', 'Model_LibertyLimited', 'Model_LibertySport', 'Model_Lucerne4dr', 'Model_MDX4WD', 'Model_MKXAWD', 'Model_MKXFWD', 'Model_MKZ4dr', 'Model_MX5', 'Model_Matrix5dr', 'Model_Mazda34dr', 'Model_Mazda35dr', 'Model_Mazda64dr', 'Model_Milan4dr', 'Model_Model', 'Model_Monte', 'Model_MuranoS', 'Model_MustangDeluxe', 'Model_MustangPremium', 'Model_MustangShelby', 'Model_Navigator', 'Model_Navigator2WD', 'Model_Navigator4WD', 'Model_Navigator4dr', 'Model_New', 'Model_OdysseyEX', 'Model_OdysseyLX', 'Model_Optima4dr', 'Model_Outback3.6R', 'Model_Outlander2WD', 'Model_Outlander4WD', 'Model_PT', 'Model_PacificaLimited', 'Model_PacificaTouring', 'Model_Passat', 'Model_Pathfinder2WD', 'Model_PathfinderSE', 'Model_Patriot4WD', 'Model_PatriotLimited', 'Model_PilotEX', 'Model_PilotLX', 'Model_PilotSE', 'Model_PriusBase', 'Model_PriusFive', 'Model_PriusFour', 'Model_PriusOne', 'Model_Q5quattro', 'Model_Q7quattro', 'Model_QX562WD', 'Model_QX564WD', 'Model_Quest4dr', 'Model_RAV4', 'Model_RAV44dr', 'Model_RAV4Base', 'Model_RAV4Sport', 'Model_RDXFWD', 'Model_RX-84dr', 'Model_Ranger2WD', 'Model_Ranger4WD', 'Model_RangerSuperCab', 'Model_Regal4dr', 'Model_RegalGS', 'Model_RegalPremium', 'Model_RegalTurbo', 'Model_RidgelineRTL', 'Model_RidgelineSport', 'Model_RioLX', 'Model_RogueFWD', 'Model_S2000Manual', 'Model_S44dr', 'Model_S804dr', 'Model_SC', 'Model_SL-ClassSL500', 'Model_SLK-ClassSLK350', 'Model_STS4dr', 'Model_Savana', 'Model_Sedona4dr', 'Model_SedonaEX', 'Model_Sequoia4WD', 'Model_Sequoia4dr', 'Model_SequoiaLimited', 'Model_SequoiaPlatinum', 'Model_SequoiaSR5', 'Model_SiennaLimited', 'Model_SiennaSE', 'Model_SonicHatch', 'Model_Sorento2WD', 'Model_SorentoSX', 'Model_Sportage2WD', 'Model_SportageAWD', 'Model_SportageEX', 'Model_SportageSX', 'Model_Sprinter', 'Model_Suburban4dr', 'Model_TL4dr', 'Model_TLAutomatic', 'Model_TSXAutomatic', 'Model_TT2dr', 'Model_Tahoe4dr', 'Model_TahoeLS', 'Model_Taurus4dr', 'Model_TaurusLimited', 'Model_TaurusSE', 'Model_TaurusSHO', 'Model_Tiguan2WD', 'Model_TiguanS', 'Model_TiguanSE', 'Model_TiguanSEL', 'Model_Titan', 'Model_Titan2WD', 'Model_Titan4WD', 'Model_Touareg4dr', 'Model_TucsonLimited', 'Model_Tundra2WD', 'Model_Tundra4WD', 'Model_TundraBase', 'Model_TundraLimited', 'Model_VeracruzAWD', 'Model_VeracruzFWD', 'Model_Versa4dr', 'Model_Versa5dr', 'Model_Vibe4dr', 'Model_WRXBase', 'Model_WRXLimited', 'Model_WRXPremium', 'Model_WRXSTI', 'Model_Wrangler2dr', 'Model_WranglerRubicon', 'Model_WranglerSahara', 'Model_WranglerX', 'Model_X1xDrive28i', 'Model_X3AWD', 'Model_XC60AWD', 'Model_XC60FWD', 'Model_XC60T6', 'Model_XC704dr', 'Model_XC90AWD', 'Model_XC90FWD', 'Model_XC90T6', 'Model_XF4dr', 'Model_XJ4dr', 'Model_XK2dr', 'Model_Xterra2WD', 'Model_Xterra4WD', 'Model_Xterra4dr', 'Model_Yaris', 'Model_Yaris4dr', 'Model_YarisBase', 'Model_YarisLE', 'Model_Yukon4dr', 'Model_tC2dr', 'Model_xB5dr', 'Model_xD5dr', 'State_new', 'Make_new', 'Model_new']
+columns_list = ['Year', 'Mileage', 'State_new_ AL', 'State_new_ AZ', 'State_new_ CA', 'State_new_ CO', 'State_new_ FL', 'State_new_ GA', 'State_new_ IL', 'State_new_ IN', 'State_new_ KY', 'State_new_ MA', 'State_new_ MD', 'State_new_ MI', 'State_new_ MN', 'State_new_ MO', 'State_new_ NC', 'State_new_ NJ', 'State_new_ NY', 'State_new_ OH', 'State_new_ PA', 'State_new_ TN', 'State_new_ TX', 'State_new_ VA', 'State_new_ WA', 'State_new_ WI', 'State_new_OTRO', 'Make_new_BMW', 'Make_new_Chevrolet', 'Make_new_Dodge', 'Make_new_Ford', 'Make_new_GMC', 'Make_new_Honda', 'Make_new_Hyundai', 'Make_new_Jeep', 'Make_new_Kia', 'Make_new_Lexus', 'Make_new_OTRO', 'Make_new_Toyota', 'Make_new_Volkswagen', 'Model_new_15004WD', 'Model_new_200Limited', 'Model_new_200S', 'Model_new_25004WD', 'Model_new_3', 'Model_new_300300C', 'Model_new_300300S', 'Model_new_3004dr', 'Model_new_4Runner4WD', 'Model_new_4RunnerSR5', 'Model_new_5', 'Model_new_6', 'Model_new_7', 'Model_new_AcadiaAWD', 'Model_new_AcadiaFWD', 'Model_new_Accord', 'Model_new_AccordEX-L', 'Model_new_AccordLX', 'Model_new_Altima4dr', 'Model_new_AvalonXLE', 'Model_new_C-Class4dr', 'Model_new_C-ClassC', 'Model_new_C-ClassC300', 'Model_new_CC4dr', 'Model_new_CR-V2WD', 'Model_new_CR-V4WD', 'Model_new_CR-VEX', 'Model_new_CR-VEX-L', 'Model_new_CR-VLX', 'Model_new_CTS', 'Model_new_Camaro2dr', 'Model_new_CamaroConvertible', 'Model_new_CamaroCoupe', 'Model_new_Camry', 'Model_new_Camry4dr', 'Model_new_CamryL', 'Model_new_CamryLE', 'Model_new_CamrySE', 'Model_new_CamryXLE', 'Model_new_CanyonCrew', 'Model_new_Challenger2dr', 'Model_new_ChallengerR/T', 'Model_new_Charger4dr', 'Model_new_ChargerSE', 'Model_new_ChargerSXT', 'Model_new_CherokeeLimited', 'Model_new_Civic', 'Model_new_CivicEX', 'Model_new_CivicLX', 'Model_new_ColoradoCrew', 'Model_new_CompassLatitude', 'Model_new_CompassSport', 'Model_new_Cooper', 'Model_new_Corolla4dr', 'Model_new_CorollaL', 'Model_new_CorollaLE', 'Model_new_CorollaS', 'Model_new_Corvette2dr', 'Model_new_CruzeSedan', 'Model_new_Durango2WD', 'Model_new_DurangoAWD', 'Model_new_E-ClassE', 'Model_new_E-ClassE350', 'Model_new_ES', 'Model_new_ESES', 'Model_new_Econoline', 'Model_new_EdgeLimited', 'Model_new_EdgeSEL', 'Model_new_Elantra', 'Model_new_Elantra4dr', 'Model_new_ElantraLimited', 'Model_new_EnclaveLeather', 'Model_new_EnclavePremium', 'Model_new_EquinoxAWD', 'Model_new_EquinoxFWD', 'Model_new_Escalade', 'Model_new_Escape4WD', 'Model_new_EscapeFWD', 'Model_new_EscapeSE', 'Model_new_Expedition', 'Model_new_Explorer4WD', 'Model_new_ExplorerFWD', 'Model_new_ExplorerLimited', 'Model_new_ExplorerXLT', 'Model_new_Express', 'Model_new_F-1502WD', 'Model_new_F-1504WD', 'Model_new_F-150FX4', 'Model_new_F-150Lariat', 'Model_new_F-150Platinum', 'Model_new_F-150SuperCrew', 'Model_new_F-150XL', 'Model_new_F-150XLT', 'Model_new_F-250Lariat', 'Model_new_FJ', 'Model_new_FiestaSE', 'Model_new_FlexSEL', 'Model_new_Focus4dr', 'Model_new_FocusSE', 'Model_new_ForteEX', 'Model_new_ForteLX', 'Model_new_Fusion4dr', 'Model_new_FusionHybrid', 'Model_new_FusionSE', 'Model_new_G35', 'Model_new_G37', 'Model_new_GS', 'Model_new_GSGS', 'Model_new_GX', 'Model_new_Golf', 'Model_new_Grand', 'Model_new_HighlanderFWD', 'Model_new_HighlanderLimited', 'Model_new_IS', 'Model_new_ISIS', 'Model_new_Impala4dr', 'Model_new_ImpalaLT', 'Model_new_Impreza', 'Model_new_Jetta', 'Model_new_JourneyFWD', 'Model_new_JourneySXT', 'Model_new_LS', 'Model_new_LaCrosse4dr', 'Model_new_LaCrosseFWD', 'Model_new_Legacy2.5i', 'Model_new_Liberty4WD', 'Model_new_M-ClassML350', 'Model_new_MDXAWD', 'Model_new_Malibu', 'Model_new_Malibu1LT', 'Model_new_Malibu4dr', 'Model_new_MalibuLS', 'Model_new_MalibuLT', 'Model_new_Maxima4dr', 'Model_new_Murano2WD', 'Model_new_MuranoAWD', 'Model_new_Mustang2dr', 'Model_new_MustangBase', 'Model_new_MustangGT', 'Model_new_OTRO', 'Model_new_OdysseyEX-L', 'Model_new_OdysseyTouring', 'Model_new_OptimaEX', 'Model_new_OptimaLX', 'Model_new_OptimaSX', 'Model_new_Outback2.5i', 'Model_new_Outlander', 'Model_new_Passat4dr', 'Model_new_Pathfinder4WD', 'Model_new_PathfinderS', 'Model_new_PatriotLatitude', 'Model_new_PatriotSport', 'Model_new_Pilot2WD', 'Model_new_Pilot4WD', 'Model_new_PilotEX-L', 'Model_new_PilotTouring', 'Model_new_Prius', 'Model_new_Prius5dr', 'Model_new_PriusThree', 'Model_new_PriusTwo', 'Model_new_RAV44WD', 'Model_new_RAV4FWD', 'Model_new_RAV4LE', 'Model_new_RAV4Limited', 'Model_new_RAV4XLE', 'Model_new_RDXAWD', 'Model_new_RX', 'Model_new_RXRX', 'Model_new_Ram', 'Model_new_Rover', 'Model_new_S60T5', 'Model_new_SRXLuxury', 'Model_new_Santa', 'Model_new_SedonaLX', 'Model_new_Sentra4dr', 'Model_new_Sienna5dr', 'Model_new_SiennaLE', 'Model_new_SiennaXLE', 'Model_new_Sierra', 'Model_new_Silverado', 'Model_new_Sonata4dr', 'Model_new_SonataLimited', 'Model_new_SonataSE', 'Model_new_SonicSedan', 'Model_new_SorentoEX', 'Model_new_SorentoLX', 'Model_new_Soul+', 'Model_new_SoulBase', 'Model_new_SportageLX', 'Model_new_Suburban2WD', 'Model_new_Suburban4WD', 'Model_new_Super', 'Model_new_Tacoma2WD', 'Model_new_Tacoma4WD', 'Model_new_TacomaBase', 'Model_new_TacomaPreRunner', 'Model_new_Tahoe2WD', 'Model_new_Tahoe4WD', 'Model_new_TahoeLT', 'Model_new_TaurusSEL', 'Model_new_TerrainAWD', 'Model_new_TerrainFWD', 'Model_new_Town', 'Model_new_Transit', 'Model_new_TraverseAWD', 'Model_new_TraverseFWD', 'Model_new_TucsonAWD', 'Model_new_TucsonFWD', 'Model_new_Tundra', 'Model_new_TundraSR5', 'Model_new_Wrangler', 'Model_new_Wrangler4WD', 'Model_new_WranglerSport', 'Model_new_X3xDrive28i', 'Model_new_X5AWD', 'Model_new_X5xDrive35i', 'Model_new_Yukon', 'Model_new_Yukon2WD', 'Model_new_Yukon4WD']
 
 def load_values(year, mileage, state, make, model):
     df = pd.DataFrame(np.zeros((1, len(columns_list))), columns=columns_list).astype(int)
     state_col = 'State_ ' + state
     make_col = 'Make_' + make
     model_col = 'Model_' + model
+    # Se asignan los valores a el dataframe
     df.at[0,'Year'] = year
     df.at[0,'Mileage'] = mileage
     if state_col in columns_list:
         df.at[0,state_col] = 1
+    else:
+        df.at[0, 'State_new_OTRO'] = 1
     if make_col in columns_list:
         df.at[0,make_col] = 1
+    else:
+        df.at[0, 'Make_new_OTRO'] = 1
+
     if model_col in columns_list:
         df.at[0,model_col] = 1
+    else:
+        df.at[0, 'Model_new_OTRO'] = 1
 
-    # dataf['State_new'] = np.where(dataf['State'].isin(s_list), dataf['State'], "OTRO")
-    # dataf['Make_new'] = np.where(dataf['Make'].isin(m_list), dataf['Make'], "OTRO")
-    # dataf['Model_new'] = np.where(dataf['Model'].isin(mo_list), dataf['Model'], "OTRO")
-
-
-    print('Num:')
-    print(df[['Year','Mileage']])
-    print('State:')
-    print(df[['State_FL','State_NC','State_LA']])
-    print('Make:')
-    print(df[['Make_Chevrolet','Make_Ford','Make_Mazda']])
-    print('Model:')
-    print(df[['Model_CX30','Model_TaurusLimited','Model_TraverseFWD']])
+    print('DF:')
+    print(df)
     return df
+
+
+def predict(data):
+    file = open('p2_model', 'rb')
+    model = pickle.load(file)
+    return model.predict(data.values)[0]
+
 
 @app.route('/predict', methods = ['GET'])
 def URL_predict():
-    print('Ingresa a realizar prediccion')
     year = request.args.get('YEAR')
     mileage = request.args.get('MILEAGE')
     state = request.args.get('STATE')
     make = request.args.get('MAKE')
     model = request.args.get('MODEL')
 
-    load_values(year, mileage, state, make, model)
+    df_values = load_values(year, mileage, state, make, model)
 
-    print('State_' + state)
-    print('Make_' + make)
-    print('Model_' + model)
-    print(type(int(year)))
-    print(type(int(mileage)))
+    pd = predict(df_values)
 
-    return 'State_' + state + '  ' + 'Make_' + make + '  ' + 'Model_' + model
+    return 'Su auto tiene un valor de:  ' + str(pd)
 
 
 if __name__ == '__main__':
-    print('hola')
-    app.run(debug=True, use_reloader=False, host= '127.0.0.1', port = 8888)
+    app.run(debug=True, use_reloader=False, host= '127.0.0.1', port = 8080)
 
 
 
-# 127.0.0.1:8888/predict?YEAR=2021&MILEAGE=1000&STATE=FL&MAKE=Mazda&MODEL=CX30
+# 127.0.0.1:8080/predict?YEAR=2021&MILEAGE=1000&STATE=FL&MAKE=Jeep&MODEL=Wrangler
+# 127.0.0.1:8888/predict?YEAR=2016&MILEAGE=25741&STATE=FL&MAKE=Chevrolet&MODEL=CamaroCoupe
